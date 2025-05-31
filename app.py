@@ -19,8 +19,8 @@ def send_certificates():
     sender_password = data["sender_password"]
 
     template_path = template_url
-    if not template_path.exists():
-        return jsonify({"error": "Template not found"}), 400
+    # if not template_path.exists():
+    #     return jsonify({"error": "Template not found"}), 400
 
     results = []
     for attendee in attendees:
