@@ -18,7 +18,7 @@ def send_certificates():
     sender_email = data["sender_email"]
     sender_password = data["sender_password"]
 
-    template_path = Path(TEMPLATE_DIR) / "template.pptx"
+    template_path = template_url
     if not template_path.exists():
         return jsonify({"error": "Template not found"}), 400
 
