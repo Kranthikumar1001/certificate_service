@@ -1,45 +1,58 @@
 from flask import Flask, request, jsonify
 from generate_certificate import generate_certificate
-from send_email import send_certificate_email
-from pathlib import Path
+from send_email import send_email
 import os
+import requests
 
 app = Flask(__name__)
-TEMPLATE_DIR = "templates"
-OUTPUT_DIR = "output"
 
+# Directory to save generated files
+OUTPUT_DIR = "generated_certificates"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+def download_template(template_url, filename='template.pptx'):
+    try:
+        response = requests.get(template_url)
+        if response.status_code == 200:
+            with open(filename, 'wb') as f:
+                f.write(response.content)
+            return filename
+        else:
+            raise Exception(f"Failed to download template. Status code: {response.status_code}")
+    except Exception as e:
+        raise Exception(f"Error downloading template: {str(e)}")
 
 @app.route("/send-certificates", methods=["POST"])
 def send_certificates():
-    data = request.json
-    attendees = data["attendees"]  # List of dicts with name, email, address
-    template_url = data["template_url"]
-    sender_email = data["sender_email"]
-    sender_password = data["sender_password"]
+    data = request.get_json()
 
-    template_path = template_url
-    # if not template_path.exists():
-    #     return jsonify({"error": "Template not found"}), 400
+    attendees = data.get("attendees", [])
+    template_url = data.get("template_url")
+    event_location = data.get("location")
 
-    results = []
-    for attendee in attendees:
-        name = attendee["name"]
-        email = attendee["email"]
-        address = attendee["address"]
+    if not template_url or not attendees or not event_location:
+        return jsonify({"error": "Missing required data"}), 400
 
-        pdf_path = generate_certificate(name, address, template_path, OUTPUT_DIR)
-        send_certificate_email(
-            receiver_email=email,
-            subject="Your Event Certificate",
-            body=f"Hi {name},\n\nFind your certificate attached.",
-            pdf_path=pdf_path,
-            sender_email=sender_email,
-            sender_password=sender_password
-        )
-        results.append({"email": email, "status": "sent"})
+    try:
+        downloaded_template = download_template(template_url)
 
-    return jsonify(results)
+        for attendee in attendees:
+            name = attendee.get("name")
+            email = attendee.get("email")
+
+            if not name or not email:
+                continue  # Skip invalid entries
+
+            # Generate the certificate
+            pdf_path = generate_certificate(name, event_location, downloaded_template, OUTPUT_DIR)
+
+            # Send email
+            send_email(email, pdf_path)
+
+        return jsonify({"message": "Certificates generated and sent successfully."}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
