@@ -16,5 +16,5 @@ def send_email(receiver_email, pdf_path):
 
     # Send email via Gmail SMTP
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(sender_email, "Kr@nthi!001")
+        smtp.login("ditchrabbitsega@gmail.com", "Kr@nthi!001")
         smtp.send_message(msg)
