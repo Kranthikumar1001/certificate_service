@@ -29,9 +29,9 @@ def generate_certificate(name, address, template_path, output_dir):
     prs.save(output_pptx)
 
     # Convert PPTX to PDF using LibreOffice
-    subprocess.run([
-        "libreoffice", "--headless", "--convert-to", "pdf", str(output_pptx),
-        "--outdir", str(output_dir)
-    ])
+    # subprocess.run([
+    #     "libreoffice", "--headless", "--convert-to", "pdf", str(output_pptx),
+    #     "--outdir", str(output_dir)
+    # ])
 
-    return output_pdf
+    return output_pptx
